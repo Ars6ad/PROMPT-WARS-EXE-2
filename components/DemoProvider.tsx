@@ -4,10 +4,12 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import {
   createDemoReportId,
   createInitialDemoState,
+  demoSessionLifetimeMs,
   demoStorageKey,
   parsePersistedDemoState,
   reportUpdateInputSchema,
   safetyReportInputSchema,
+  serializeDemoState,
   type DemoState,
   type ReportStatus,
   type SafetyReport,
@@ -50,9 +52,17 @@ function addAuditEvent(state: DemoState, action: string, target: string): DemoSt
 
 function saveDemoState(state: DemoState) {
   try {
-    localStorage.setItem(demoStorageKey, JSON.stringify(state));
+    sessionStorage.setItem(demoStorageKey, serializeDemoState(state));
   } catch {
-    // The prototype remains usable when a browser blocks or exhausts local storage.
+    // The prototype remains usable when a browser blocks or exhausts session storage.
+  }
+}
+
+function removeDemoSession() {
+  try {
+    sessionStorage.removeItem(demoStorageKey);
+  } catch {
+    // Storage cleanup is best-effort in demo mode.
   }
 }
 
@@ -61,14 +71,42 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const storedState = parsePersistedDemoState(localStorage.getItem(demoStorageKey));
+    const storedState = parsePersistedDemoState(sessionStorage.getItem(demoStorageKey));
     if (storedState) setState(storedState);
+    try {
+      // Remove prior prototype data that was stored persistently before v4.
+      localStorage.removeItem('fairshift-demo-state-v3');
+    } catch {
+      // The new session-only storage remains available when local storage is blocked.
+    }
     setReady(true);
   }, []);
 
   useEffect(() => {
     if (ready) saveDemoState(state);
   }, [ready, state]);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    let expirationTimer: number | undefined;
+    const expireDemoSession = () => {
+      removeDemoSession();
+      setState(createInitialDemoState());
+    };
+    const refreshExpiration = () => {
+      if (expirationTimer !== undefined) window.clearTimeout(expirationTimer);
+      expirationTimer = window.setTimeout(expireDemoSession, demoSessionLifetimeMs);
+    };
+    const activityEvents: Array<keyof DocumentEventMap> = ['click', 'keydown', 'pointerdown', 'touchstart'];
+
+    refreshExpiration();
+    activityEvents.forEach(eventName => document.addEventListener(eventName, refreshExpiration, { passive: true }));
+    return () => {
+      if (expirationTimer !== undefined) window.clearTimeout(expirationTimer);
+      activityEvents.forEach(eventName => document.removeEventListener(eventName, refreshExpiration));
+    };
+  }, [ready]);
 
   const checkIn = useCallback((): ActionResult => {
     let result: ActionResult = { ok: false, message: 'You are already checked in.' };
@@ -175,11 +213,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const resetDemo = useCallback(() => {
     setState(createInitialDemoState());
-    try {
-      localStorage.removeItem(demoStorageKey);
-    } catch {
-      // State has already been reset in memory; storage cleanup is best-effort in demo mode.
-    }
+    removeDemoSession();
   }, []);
 
   const value = useMemo(() => ({ state, ready, checkIn, checkOut, submitReport, updateReport, resetDemo }), [state, ready, checkIn, checkOut, submitReport, updateReport, resetDemo]);

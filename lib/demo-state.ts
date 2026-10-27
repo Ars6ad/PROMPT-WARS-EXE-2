@@ -73,8 +73,15 @@ export const reportUpdateInputSchema = z.object({
   resolutionNote: shortText(2_000).optional(),
 }).strict();
 
-export const demoStorageKey = 'fairshift-demo-state-v3';
+export const demoStorageKey = 'fairshift-demo-session-v4';
 const maxStoredStateLength = 75_000;
+export const demoSessionLifetimeMs = 30 * 60 * 1_000;
+
+const persistedDemoSessionSchema = z.object({
+  expiresAt: z.number().int().positive(),
+  state: demoStateSchema,
+  version: z.literal(1),
+}).strict();
 
 export function createInitialDemoState(): DemoState {
   return {
@@ -137,12 +144,21 @@ export function createInitialDemoState(): DemoState {
   };
 }
 
-export function parsePersistedDemoState(raw: string | null): DemoState | null {
+export function serializeDemoState(state: DemoState, now = Date.now()): string {
+  return JSON.stringify({
+    version: 1,
+    expiresAt: now + demoSessionLifetimeMs,
+    state,
+  });
+}
+
+export function parsePersistedDemoState(raw: string | null, now = Date.now()): DemoState | null {
   if (!raw || raw.length > maxStoredStateLength) return null;
 
   try {
-    const result = demoStateSchema.safeParse(JSON.parse(raw));
-    return result.success ? result.data : null;
+    const result = persistedDemoSessionSchema.safeParse(JSON.parse(raw));
+    if (!result.success || result.data.expiresAt <= now) return null;
+    return result.data.state;
   } catch {
     return null;
   }
@@ -155,6 +171,13 @@ export function adminSafeReport(report: SafetyReport): Omit<SafetyReport, 'repor
 }
 
 export function createDemoReportId(): string {
-  const random = globalThis.crypto?.randomUUID?.().replace(/-/g, '').slice(0, 12) ?? `${Date.now()}${Math.random().toString(36).slice(2, 8)}`;
+  const uuid = globalThis.crypto?.randomUUID?.();
+  if (uuid) return `FS-${uuid.replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+
+  const cryptoApi = globalThis.crypto;
+  if (!cryptoApi?.getRandomValues) throw new Error('A cryptographically secure random generator is required.');
+
+  const bytes = cryptoApi.getRandomValues(new Uint8Array(12));
+  const random = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
   return `FS-${random.toUpperCase()}`;
 }

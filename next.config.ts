@@ -1,10 +1,12 @@
-import { securityHeaders } from './lib/security';
+import { privateRouteHeaders, securityHeaders, type SecurityHeader } from './lib/security';
+
+type HeaderRule = { source: string; headers: SecurityHeader[] };
 
 type FairShiftNextConfig = {
   poweredByHeader: boolean;
   outputFileTracingRoot: string;
   experimental: { optimizePackageImports: string[] };
-  headers: () => Promise<Array<{ source: string; headers: typeof securityHeaders }>>;
+  headers: () => Promise<HeaderRule[]>;
 };
 
 const config: FairShiftNextConfig = {
@@ -14,10 +16,12 @@ const config: FairShiftNextConfig = {
     optimizePackageImports: ['lucide-react'],
   },
   async headers() {
-    return [{
-      source: '/:path*',
-      headers: securityHeaders,
-    }];
+    return [
+      { source: '/:path*', headers: securityHeaders },
+      { source: '/login', headers: privateRouteHeaders },
+      { source: '/worker/:path*', headers: privateRouteHeaders },
+      { source: '/admin/:path*', headers: privateRouteHeaders },
+    ];
   },
 };
 

@@ -2,6 +2,9 @@ import './globals.css';
 import { AccessibilityProvider } from '@/components/AccessibilityTools';
 import { DemoProvider } from '@/components/DemoProvider';
 
+// A nonce CSP requires request-time rendering so Next.js can attach the nonce to its scripts.
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'FairShift | Fair work, made visible',
   description: 'A workforce clarity prototype for shifts, pay understanding, safety voice, rest signals, and skills.',
