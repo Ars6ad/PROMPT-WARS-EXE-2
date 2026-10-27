@@ -107,6 +107,11 @@ export default function WorkerPage({ params }: { params: Promise<{ page: string 
       </div>
     </section>
 
+    <section className="skill-nudge" aria-labelledby="skill-nudge-heading">
+      <div className="skill-nudge-icon"><BadgeCheck size={21} /></div>
+      <div><div className="eyebrow">Keep growing</div><h2 id="skill-nudge-heading">Your skill passport</h2><p>2 skills are verified and Masonry Assistant is in progress.</p><Link href="/worker/skills">View your skills <ChevronRight size={15} /></Link></div>
+    </section>
+
     <section className="card safety-pulse" aria-label="Safety and rest update">
       <div className="safety-pulse-icon"><AlertTriangle size={20} /></div>
       <div><h3>Rest check</h3><p>You have worked 58 hours this week. If rest time feels unsafe, speak to your supervisor or use the feedback flow.</p><Link href="/worker/feedback">Share feedback <ChevronRight size={15} /></Link></div>
