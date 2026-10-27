@@ -23,8 +23,9 @@ FairShift keeps those jobs distinct:
 - Review an explained, estimated payslip with recorded hours and overtime.
 - Submit named or anonymous safety reports using a guided form.
 - See a daily plan, pay snapshot, rest-time prompt, quick actions, and latest safety-report status on one dashboard.
+- Follow a practical shift rhythm: arrival and check-in, safety handover, planned recovery and meal breaks, a late-shift fatigue check, and handover/check-out.
 - Give anonymous-by-default feedback and view a portable skill passport.
-- Use short labels and browser text-to-speech support where available.
+- Choose from 32 voice locales and use opt-in browser read-aloud for shift, pay, safety, feedback, and profile information. Core shift briefings include native-language wording for Arabic, Bengali, Gujarati, Hindi, Kannada, Malayalam, Marathi, Punjabi, Tamil, Telugu, and Urdu.
 
 ### Admin workspace
 
@@ -32,13 +33,24 @@ FairShift keeps those jobs distinct:
 - Follow up on incoming safety reports without exposing an anonymous reporter identity.
 - Assign, progress, and resolve demo incidents with a local audit trail.
 - Explore workers, insights, pay queries, rules, and audit records through a dedicated desktop-friendly navigation model.
+- Use opt-in voice briefings for daily priorities, workforce signals, pay-query queues, safety cases, and audit history without exposing anonymous reporter identity.
 
 ### Experience and accessibility
 
 - Responsive layouts for compact phone widths through desktop workspaces.
 - A light visual system built from semantic CSS tokens, a restrained violet action colour, warm yellow attention states, and high-contrast ink surfaces.
 - Keyboard-visible focus states, labeled icon controls, readable system-font stacks, reduced-motion support, and an increased-contrast treatment.
+- Read-aloud never starts automatically, always has a visible Stop control, requires no microphone access, and keeps written information available alongside speech.
 - One clear primary action per task area; secondary workflows are presented as descriptive links rather than competing buttons.
+
+### Research-informed workday flow
+
+The shift flow is intentionally more than a time clock. It reflects a practical frontline sequence: confirm arrival, receive the task and safety handover, protect planned recovery and meal time, check workload/fatigue before the final block, then hand over and record the end of work. It is **not** a substitute for a local contract, collective agreement, or safety policy.
+
+- [NIOSH’s fatigue guidance](https://www.cdc.gov/niosh/topics/fatigue/default.html) identifies nonstandard schedules, long hours, task demands, and heat as contributors to fatigue that can impair attention, reaction time, memory, and judgment.
+- [NIOSH guidance on rest breaks](https://www.cdc.gov/niosh/work-hour-training-for-nurses/longhours/mod5/10.html) describes scheduling breaks with the work assignment and supporting coverage so workers can actually take them.
+- [ILO working-time guidance](https://www.ilo.org/ilo-helpdesk-questions-and-answers-business-and-working-time) recommends arranging rest and meal periods around the nature and risk of the work, subject to local law and agreements.
+- The read-aloud design uses the browser’s standard [SpeechSynthesis API](https://developer.mozilla.org/en-US/docs/Web/API/SpeechSynthesis), including the asynchronous voice-list update supported by modern browsers. Exact voices depend on the person’s device and browser.
 
 ## Product flow
 
@@ -73,7 +85,7 @@ The worker and admin routes use the same in-browser demo repository. For example
 
 ## Technology
 
-- **Framework:** Next.js 15 App Router with React 19 and TypeScript
+- **Framework:** Next.js 16 App Router with React 19 and TypeScript
 - **UI:** CSS custom properties, Tailwind CSS foundations, Lucide icons
 - **Validation:** Zod schemas for the demo data layer
 - **Testing:** Vitest for pay, fatigue, and anonymous-identity rules
