@@ -1,25 +1,193 @@
 'use client';
 
-import {createContext,useCallback,useContext,useEffect,useMemo,useState} from 'react';
-import {z} from 'zod';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createDemoReportId,
+  createInitialDemoState,
+  demoStorageKey,
+  parsePersistedDemoState,
+  reportUpdateInputSchema,
+  safetyReportInputSchema,
+  type DemoState,
+  type ReportStatus,
+  type SafetyReport,
+  type SafetyReportInput,
+} from '@/lib/demo-state';
 
-export type ReportStatus='Reported'|'Acknowledged'|'Assigned'|'In progress'|'Resolved'|'Closed';
-export type AttendanceStatus='scheduled'|'checked-in'|'checked-out';
-export type SafetyReport={id:string;category:string;severity:'Low'|'Medium'|'High';status:ReportStatus;detail:string;submittedAt:string;anonymous:boolean;reporterName?:string;owner?:string;resolutionNote?:string;timeline:{status:ReportStatus;at:string;note:string}[]};
-export type DemoState={attendance:{status:AttendanceStatus;shiftId:string;worksite:string;scheduledStart:string;checkedInAt?:string;checkedOutAt?:string;actionIds:string[]};reports:SafetyReport[];audit:{at:string;actor:string;action:string;target:string}[];payQueryCount:number};
-const storageKey='fairshift-demo-state-v2';
-const initialState:DemoState={attendance:{status:'scheduled',shiftId:'shift-asha-2026-10-27',worksite:'Nehru Metro Site · Zone B',scheduledStart:'09:00',actionIds:[]},payQueryCount:12,reports:[{id:'FS-2048',category:'Missing PPE',severity:'High',status:'In progress',detail:'Helmets are missing near the scaffolding entrance.',submittedAt:'Today, 9:18 AM',anonymous:true,owner:'Priya Sharma',timeline:[{status:'Reported',at:'Today, 9:18 AM',note:'Submitted anonymously'},{status:'Acknowledged',at:'Today, 9:32 AM',note:'Safety desk notified'},{status:'In progress',at:'Today, 10:04 AM',note:'PPE inventory is being checked'}]},{id:'FS-2029',category:'Hygiene / sanitation',severity:'Medium',status:'Acknowledged',detail:'Hand sanitiser is empty in Ward 4.',submittedAt:'Yesterday',anonymous:true,timeline:[{status:'Reported',at:'Yesterday',note:'Submitted anonymously'},{status:'Acknowledged',at:'Yesterday',note:'Facilities team notified'}]},{id:'FS-2004',category:'Unsafe equipment',severity:'High',status:'Resolved',detail:'Damaged ladder replaced.',submittedAt:'14 Oct',anonymous:false,reporterName:'Ravi Kumar',owner:'Arun Mehta',resolutionNote:'Damaged ladder removed and replaced before the next shift.',timeline:[{status:'Reported',at:'14 Oct',note:'Submitted'},{status:'Acknowledged',at:'14 Oct',note:'Supervisor notified'},{status:'Resolved',at:'15 Oct',note:'Damaged ladder replaced'}]}],audit:[]};
-const savedStateSchema=z.object({attendance:z.object({status:z.enum(['scheduled','checked-in','checked-out']),shiftId:z.string(),worksite:z.string(),scheduledStart:z.string(),checkedInAt:z.string().optional(),checkedOutAt:z.string().optional(),actionIds:z.array(z.string())}),reports:z.array(z.any()),audit:z.array(z.any()),payQueryCount:z.number()});
-function stamp(){return new Intl.DateTimeFormat('en-IN',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(new Date())}
-function audit(state:DemoState,action:string,target:string):DemoState{return {...state,audit:[{at:stamp(),actor:'Demo user',action,target},...state.audit].slice(0,50)}}
-type ContextValue={state:DemoState;ready:boolean;checkIn:()=>{ok:boolean;message:string};checkOut:()=>{ok:boolean;message:string};submitReport:(input:{category:string;detail:string;severity:'Low'|'Medium'|'High';anonymous:boolean})=>SafetyReport;updateReport:(id:string,input:{status:ReportStatus;owner?:string;resolutionNote?:string})=>{ok:boolean;message:string};resetDemo:()=>void};
-const DemoContext=createContext<ContextValue|null>(null);
-export function DemoProvider({children}:{children:React.ReactNode}){const [state,setState]=useState(initialState);const [ready,setReady]=useState(false);useEffect(()=>{try{const parsed=savedStateSchema.safeParse(JSON.parse(localStorage.getItem(storageKey)??''));if(parsed.success)setState(parsed.data as DemoState)}catch{}setReady(true)},[]);useEffect(()=>{if(ready)localStorage.setItem(storageKey,JSON.stringify(state))},[state,ready]);
- const checkIn=useCallback(()=>{let result={ok:false,message:'You are already checked in.'};setState(current=>{if(current.attendance.status==='checked-in')return current;result={ok:true,message:'Your shift has been recorded.'};let next={...current,attendance:{...current.attendance,status:'checked-in' as const,checkedInAt:stamp(),actionIds:[...current.attendance.actionIds,'check-in-'+new Date().toISOString()]}};return audit(next,'Checked in',next.attendance.shiftId)});return result},[]);
- const checkOut=useCallback(()=>{let result={ok:false,message:'Check in before checking out.'};setState(current=>{if(current.attendance.status!=='checked-in')return current;result={ok:true,message:'Check-out recorded. Your hours will be reviewed for payroll.'};let next={...current,attendance:{...current.attendance,status:'checked-out' as const,checkedOutAt:stamp(),actionIds:[...current.attendance.actionIds,'check-out-'+new Date().toISOString()]}};return audit(next,'Checked out',next.attendance.shiftId)});return result},[]);
- const submitReport=useCallback((input:{category:string;detail:string;severity:'Low'|'Medium'|'High';anonymous:boolean})=>{const id=`FS-${2056+Math.floor(Math.random()*900)}`;const report:SafetyReport={id,category:input.category,detail:input.detail,severity:input.severity,status:'Reported',submittedAt:stamp(),anonymous:input.anonymous,reporterName:input.anonymous?undefined:'Asha Kumar',timeline:[{status:'Reported',at:stamp(),note:input.anonymous?'Submitted anonymously':'Submitted by worker'}]};setState(current=>audit({...current,reports:[report,...current.reports]},'Submitted safety report',id));return report},[]);
- const updateReport=useCallback((id:string,input:{status:ReportStatus;owner?:string;resolutionNote?:string})=>{let result={ok:false,message:'Report could not be found.'};setState(current=>{const report=current.reports.find(x=>x.id===id);if(!report)return current;if(input.status==='Resolved'&&!input.resolutionNote?.trim()){result={ok:false,message:'Add a resolution note before resolving this incident.'};return current}result={ok:true,message:input.status==='Resolved'?'Resolution saved. Worker verification is now pending.':'Incident updated.'};const reports=current.reports.map(x=>x.id!==id?x:{...x,status:input.status,owner:input.owner||x.owner,resolutionNote:input.resolutionNote||x.resolutionNote,timeline:[...x.timeline,{status:input.status,at:stamp(),note:input.resolutionNote||`Status set to ${input.status}`}]});return audit({...current,reports},`Updated safety status to ${input.status}`,id)});return result},[]);
- const resetDemo=useCallback(()=>{setState(initialState);localStorage.removeItem(storageKey)},[]);
- const value=useMemo(()=>({state,ready,checkIn,checkOut,submitReport,updateReport,resetDemo}),[state,ready,checkIn,checkOut,submitReport,updateReport,resetDemo]);return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>}
-export function useDemo(){const context=useContext(DemoContext);if(!context)throw new Error('useDemo must be used inside DemoProvider');return context}
-export function adminSafeReport(report:SafetyReport){const {reporterName,...safe}=report;return report.anonymous?safe:report}
+export type { DemoState, ReportStatus, SafetyReport, SafetyReportInput } from '@/lib/demo-state';
+
+type ActionResult = { ok: boolean; message: string };
+type SubmitReportResult = { ok: true; report: SafetyReport } | { ok: false; message: string };
+type UpdateReportInput = { status: ReportStatus; owner?: string; resolutionNote?: string };
+
+type ContextValue = {
+  state: DemoState;
+  ready: boolean;
+  checkIn: () => ActionResult;
+  checkOut: () => ActionResult;
+  submitReport: (input: SafetyReportInput) => SubmitReportResult;
+  updateReport: (id: string, input: UpdateReportInput) => ActionResult;
+  resetDemo: () => void;
+};
+
+const DemoContext = createContext<ContextValue | null>(null);
+const timestampFormatter = new Intl.DateTimeFormat('en-IN', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Asia/Kolkata',
+});
+
+function stamp() {
+  return timestampFormatter.format(new Date());
+}
+
+function addAuditEvent(state: DemoState, action: string, target: string): DemoState {
+  return {
+    ...state,
+    audit: [{ at: stamp(), actor: 'Demo user', action, target }, ...state.audit].slice(0, 50),
+  };
+}
+
+function saveDemoState(state: DemoState) {
+  try {
+    localStorage.setItem(demoStorageKey, JSON.stringify(state));
+  } catch {
+    // The prototype remains usable when a browser blocks or exhausts local storage.
+  }
+}
+
+export function DemoProvider({ children }: { children: React.ReactNode }) {
+  const [state, setState] = useState<DemoState>(createInitialDemoState);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    const storedState = parsePersistedDemoState(localStorage.getItem(demoStorageKey));
+    if (storedState) setState(storedState);
+    setReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (ready) saveDemoState(state);
+  }, [ready, state]);
+
+  const checkIn = useCallback((): ActionResult => {
+    let result: ActionResult = { ok: false, message: 'You are already checked in.' };
+
+    setState(current => {
+      if (current.attendance.status === 'checked-in') return current;
+      if (current.attendance.status === 'checked-out') {
+        result = { ok: false, message: 'This demo shift is already complete.' };
+        return current;
+      }
+
+      result = { ok: true, message: 'Your shift has been recorded.' };
+      const next = {
+        ...current,
+        attendance: {
+          ...current.attendance,
+          status: 'checked-in' as const,
+          checkedInAt: stamp(),
+          actionIds: [...current.attendance.actionIds, `check-in-${crypto.randomUUID()}`],
+        },
+      };
+      return addAuditEvent(next, 'Checked in', next.attendance.shiftId);
+    });
+
+    return result;
+  }, []);
+
+  const checkOut = useCallback((): ActionResult => {
+    let result: ActionResult = { ok: false, message: 'Check in before checking out.' };
+
+    setState(current => {
+      if (current.attendance.status !== 'checked-in') return current;
+
+      result = { ok: true, message: 'Check-out recorded. Your hours will be reviewed for payroll.' };
+      const next = {
+        ...current,
+        attendance: {
+          ...current.attendance,
+          status: 'checked-out' as const,
+          checkedOutAt: stamp(),
+          actionIds: [...current.attendance.actionIds, `check-out-${crypto.randomUUID()}`],
+        },
+      };
+      return addAuditEvent(next, 'Checked out', next.attendance.shiftId);
+    });
+
+    return result;
+  }, []);
+
+  const submitReport = useCallback((input: SafetyReportInput): SubmitReportResult => {
+    const parsed = safetyReportInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, message: 'Review the safety report details and try again.' };
+
+    const submittedAt = stamp();
+    const report: SafetyReport = {
+      id: createDemoReportId(),
+      ...parsed.data,
+      status: 'Reported',
+      submittedAt,
+      reporterName: parsed.data.anonymous ? undefined : 'Asha Kumar',
+      timeline: [{
+        status: 'Reported',
+        at: submittedAt,
+        note: parsed.data.anonymous ? 'Submitted anonymously' : 'Submitted by worker',
+      }],
+    };
+
+    setState(current => addAuditEvent({ ...current, reports: [report, ...current.reports] }, 'Submitted safety report', report.id));
+    return { ok: true, report };
+  }, []);
+
+  const updateReport = useCallback((id: string, input: UpdateReportInput): ActionResult => {
+    const parsed = reportUpdateInputSchema.safeParse(input);
+    if (!parsed.success) return { ok: false, message: 'Review the incident update and try again.' };
+    if (parsed.data.status === 'Resolved' && !parsed.data.resolutionNote?.trim()) {
+      return { ok: false, message: 'Add a resolution note before resolving this incident.' };
+    }
+
+    let result: ActionResult = { ok: false, message: 'Report could not be found.' };
+    setState(current => {
+      const report = current.reports.find(item => item.id === id);
+      if (!report) return current;
+
+      result = {
+        ok: true,
+        message: parsed.data.status === 'Resolved' ? 'Resolution saved. Worker verification is now pending.' : 'Incident updated.',
+      };
+      const reports = current.reports.map(item => item.id !== id ? item : {
+        ...item,
+        status: parsed.data.status,
+        owner: parsed.data.owner || item.owner,
+        resolutionNote: parsed.data.resolutionNote || item.resolutionNote,
+        timeline: [...item.timeline, {
+          status: parsed.data.status,
+          at: stamp(),
+          note: parsed.data.resolutionNote || `Status set to ${parsed.data.status}`,
+        }],
+      });
+      return addAuditEvent({ ...current, reports }, `Updated safety status to ${parsed.data.status}`, id);
+    });
+
+    return result;
+  }, []);
+
+  const resetDemo = useCallback(() => {
+    setState(createInitialDemoState());
+    try {
+      localStorage.removeItem(demoStorageKey);
+    } catch {
+      // State has already been reset in memory; storage cleanup is best-effort in demo mode.
+    }
+  }, []);
+
+  const value = useMemo(() => ({ state, ready, checkIn, checkOut, submitReport, updateReport, resetDemo }), [state, ready, checkIn, checkOut, submitReport, updateReport, resetDemo]);
+  return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
+}
+
+export function useDemo() {
+  const context = useContext(DemoContext);
+  if (!context) throw new Error('useDemo must be used inside DemoProvider');
+  return context;
+}

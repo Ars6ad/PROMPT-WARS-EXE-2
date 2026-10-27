@@ -121,6 +121,18 @@ Use either role switch on the sign-in screen. The scenario is seeded with fictio
 
 All names, worksites, pay amounts, and incident records are fabricated for demonstration purposes.
 
+## Security and privacy controls
+
+This prototype deliberately keeps sensitive functionality out of the browser-only demo while still applying sensible client and deployment safeguards:
+
+- **Strict response headers:** Content Security Policy, anti-clickjacking, MIME-sniffing, referrer, cross-origin, and permissions controls are applied to every route through `next.config.ts`.
+- **No secrets in client state:** The demo has no server secret, payment credential, biometric record, or real worker record. `.env` files remain ignored by Git.
+- **Bounded local demo state:** Persisted browser data is size-limited and validated with strict Zod schemas before it can re-enter the app state.
+- **Privacy-minimised triage:** Administrator report cards receive an identity-stripped version of each report; anonymous reporting is not a visual-only promise.
+- **Explicit prototype boundary:** Demo login is not authentication, and local actions are never presented as approved payroll, verified attendance, or legal advice.
+
+These controls improve the prototype’s safety posture; they do not replace server-side authentication, authorization, encryption, audit retention, or a formal threat model for a production deployment.
+
 ## Quality checks
 
 Run these before proposing a deployment:
@@ -128,12 +140,14 @@ Run these before proposing a deployment:
 ```bash
 npm run test
 npm run build
+npm run quality
 ```
 
 | Check | What it protects |
 | --- | --- |
 | `npm run test` | Pay/fatigue rules and the anonymous-report privacy boundary |
 | `npm run build` | Type checking and a production Next.js bundle |
+| `npm run quality` | Strict TypeScript check, unit suite, and production bundle in one command |
 | Manual local check | Compact worker screens, landing page, and admin safety workflow |
 
 ## Container deployment

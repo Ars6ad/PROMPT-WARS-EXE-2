@@ -11,9 +11,10 @@ import {
   Shield,
   ShieldCheck,
   WalletCards,
+  type LucideIcon,
 } from 'lucide-react';
 
-const Feature = ({ icon: Icon, title, children }: { icon: any; title: string; children: string }) => (
+const Feature = ({ icon: Icon, title, children }: { icon: LucideIcon; title: string; children: string }) => (
   <article className="card">
     <div className="iconbox"><Icon size={22} /></div>
     <h3>{title}</h3>
@@ -29,13 +30,14 @@ export default function Landing() {
           <Link href="/" className="brand-lockup"><span className="brand-mark" aria-hidden="true">F</span>FairShift</Link>
           <div className="site-links">
             <a href="#how-it-works">How it works</a>
+            <a href="#impact">Why it matters</a>
             <a href="#for-teams">For teams</a>
             <Link href="/privacy">Privacy</Link>
           </div>
           <Link className="btn primary" href="/login">Sign in <ArrowRight size={17} /></Link>
         </nav>
       </header>
-      <main>
+      <main id="main-content">
         <section className="hero">
           <div className="landing hero-grid">
             <div>
@@ -84,6 +86,18 @@ export default function Landing() {
             <Feature icon={WalletCards} title="Pay clarity">See hours, overtime, and estimated earnings in plain language.</Feature>
             <Feature icon={ShieldCheck} title="Safety voice">Report hazards with a named or anonymous path.</Feature>
             <Feature icon={Languages} title="Language first">Short labels, voice support, and regional-language-ready content.</Feature>
+          </div>
+        </section>
+
+        <section id="impact" className="landing landing-section impact-section">
+          <div className="section-top">
+            <div><div className="eyebrow">Designed for decent work</div><h2 className="big">Small moments of clarity protect bigger rights.</h2></div>
+            <p className="muted" style={{ maxWidth: 390, margin: 0 }}>FairShift turns abstract workforce data into actions a worker can understand and a manager can responsibly follow through on.</p>
+          </div>
+          <div className="impact-grid">
+            <article className="card"><Clock3 size={24} /><h3>Know the shift</h3><p className="muted">A worker can see where to go, when the shift ends, and when to take a planned break—without asking around.</p></article>
+            <article className="card"><WalletCards size={24} /><h3>Understand the pay</h3><p className="muted">Estimated earnings explain recorded hours, overtime, allowances, and deductions in plain language.</p></article>
+            <article className="card"><ShieldCheck size={24} /><h3>Raise safety early</h3><p className="muted">A report can be named or anonymous, while operations sees the detail needed to resolve the concern.</p></article>
           </div>
         </section>
 
