@@ -50,9 +50,9 @@ export default function Landing() {
               </div>
             </div>
 
-            <div className="hero-product-preview" aria-label="Preview of the FairShift worker workspace">
+            <aside className="hero-product-preview" aria-labelledby="workspace-preview-title">
               <div className="preview-topbar">
-                <div className="preview-brand"><span className="preview-brand-mark" aria-hidden="true">F</span>FairShift</div>
+                <div className="preview-brand" id="workspace-preview-title"><span className="preview-brand-mark" aria-hidden="true">F</span>FairShift worker workspace</div>
                 <span>Today · 27 Oct</span>
               </div>
               <div className="preview-shift-card">
@@ -69,7 +69,8 @@ export default function Landing() {
                 <ShieldCheck size={18} />
                 <span><b>Safety support is ready.</b><small>Report concerns, with or without your name.</small></span>
               </div>
-            </div>
+              <p className="preview-caption">One workday, visible in one place.</p>
+            </aside>
           </div>
         </section>
 
