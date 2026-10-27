@@ -1,0 +1,1 @@
+export default function About(){return <main className="shell worker"><h1 className="title">About FairShift</h1><p className="muted">A worker trust and workforce health prototype aligned to UN SDG 8: Decent Work and Economic Growth.</p></main>}
