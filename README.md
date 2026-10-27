@@ -18,6 +18,7 @@ The project is informed by the intent of **UN Sustainable Development Goal 8 —
 - [Quick start](#quick-start)
 - [Routes and demo access](#routes-and-demo-access)
 - [Privacy, security, and prototype boundaries](#privacy-security-and-prototype-boundaries)
+- [Security policy](#security-policy)
 - [Quality checks](#quality-checks)
 - [Container and Cloud Run deployment](#container-and-cloud-run-deployment)
 - [Production-readiness plan](#production-readiness-plan)
@@ -148,7 +149,7 @@ flowchart LR
 ### Runtime model
 
 - `DemoProvider` connects worker and admin interactions in **one browser profile**.
-- State is written to `localStorage` only after schema validation and is size-bounded before parsing.
+- Scenario state is written only to `sessionStorage`, is schema-validated and size-bounded before parsing, and expires after 30 minutes. It is cleared when the browser tab session ends.
 - A worker safety report appears in the admin safety workspace in that same browser profile.
 - Admin updates append to the local audit trail.
 - Browser-local state is deliberately not synchronised between devices, browsers, accounts, or Cloud Run instances.
@@ -161,8 +162,8 @@ flowchart LR
 | Unsafe inputs | Strict Zod schemas validate persisted demo state and safety report inputs |
 | Anonymous reporting | Admin rendering receives an identity-stripped report object |
 | Incident closure | A resolution note is required before a case can be marked resolved |
-| Headers | Next.js adds CSP, anti-framing, MIME-sniffing, referrer, cross-origin, and permissions controls |
-| Browser privacy | Camera, geolocation, microphone, payment, and USB are disabled through `Permissions-Policy` |
+| Headers | A request-specific nonce CSP, HSTS, anti-framing, MIME-sniffing, referrer, cross-origin, cache, and permissions controls |
+| Browser privacy | Camera, geolocation, microphone, payment, screen capture, USB, sharing, and other unused capabilities are disabled through `Permissions-Policy` |
 
 ### Repository map
 
@@ -191,7 +192,7 @@ Dockerfile                   Node 20 Alpine container build
 
 ### Prerequisites
 
-- [Node.js](https://nodejs.org/) 20 or newer
+- [Node.js](https://nodejs.org/) 22.12 or newer (Node 24 is used in CI and Docker)
 - npm 10 or newer
 
 ### Install and run in development
@@ -268,24 +269,42 @@ All names, sites, amounts, incidents, and worker records are fictional.
 
 ### What is implemented
 
-- Content Security Policy and other response headers are supplied through `next.config.ts`.
+- `proxy.ts` generates a fresh CSP nonce for every document response; Next.js applies it to its framework scripts. The policy blocks inline script attributes, untrusted script origins, framing, objects, cross-origin connections, and form posts outside the app.
+- `next.config.ts` applies HSTS, cross-origin isolation headers, MIME-sniffing prevention, referrer policy, anti-framing, restrictive browser permissions, and route-specific no-store/no-index headers.
+- Workspace and sign-in responses use `Cache-Control: no-store`; worker and admin workspace metadata is also marked non-indexable.
 - The browser demo has no embedded production credentials, payment details, biometrics, or real worker data.
 - `.env` files and build output are ignored by Git.
-- Persisted state is schema-validated and limited in size before it re-enters the application.
+- Demo state is validated with strict Zod schemas before use, bound to one browser tab, capped in size, and given a short client-side expiry. It is not a session token or an authority source.
 - The admin safety view removes the reporter identity field before rendering any report.
 - Visual labels explicitly distinguish estimated pay, local actions, and demo-only behaviour.
+- GitHub Actions runs type checks, unit tests, a production build, and a production-dependency audit on each push and pull request. Dependabot checks npm packages and GitHub Actions weekly.
+
+### Security model and review protocol
+
+The controls above follow a defence-in-depth approach informed by the [OWASP Content Security Policy Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html), [OWASP HTTP Headers Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/HTTP_Headers_Cheat_Sheet.html), and [OWASP Session Management Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html). They reduce browser-side exposure in this prototype; they do not add identity, tenancy, or tamper-proof records.
+
+| Layer | Current control | Verification |
+| --- | --- | --- |
+| Script injection | Per-request CSP nonce and `script-src-attr 'none'` | Unit tests and manual response-header check |
+| Clickjacking and cross-origin leakage | `frame-ancestors`, `X-Frame-Options`, COOP, COEP, CORP, and `Origin-Agent-Cluster` | Response-header check |
+| Transport and browser features | HSTS on HTTPS deployments; restrictive `Permissions-Policy` | HTTPS deployment check |
+| Shared-device privacy | `no-store` on demo and workspace routes; no-index metadata/header | Response-header check |
+| Demo input and privacy | Strict bounded schemas; identity stripping before admin rendering | Unit tests |
+| Supply chain | Pinned lockfile, production `npm audit` gate, Dependabot, and CI | `npm audit --omit=dev --audit-level=high` |
+
+The CSP retains `style-src 'unsafe-inline'` because the current component system uses React inline styles. That allowance does not permit inline JavaScript. Replacing it with a strict style nonce is a deliberate future refactor, to be tested screen by screen rather than added as an unverified claim.
 
 ### What is deliberately not claimed
 
 | Area | Prototype behaviour | Required before real use |
 | --- | --- | --- |
-| Authentication | Demo role selection | Verified account lifecycle, MFA/passkeys, recovery, and session management |
-| Authorisation | Client-side route presentation | Server-enforced organisation isolation and role-based access control |
+| Authentication | Demo role selection | Verified account lifecycle, MFA/passkeys, recovery, and HTTP-only secure sessions |
+| Authorisation | Client-side route presentation | Server-enforced organisation isolation and role-based access control on every read and mutation |
 | Attendance | Browser-local check-in/out | Trusted server timestamps, idempotency, signed QR records, and offline sync |
 | Payroll | Illustrative estimate | Approved rules engine, integrations, human review, and compliant records |
 | Incidents | Browser-local reports | Encrypted storage, retention policy, attachments, escalation paths, and audit retention |
 | Voice | Browser speech synthesis | Accessibility testing with real users and device/browser support policy |
-| Deployment | Container-ready demo | Threat modelling, secrets management, monitoring, rate limiting, and incident response |
+| Deployment | Container-ready demo | Threat modelling, secrets management, monitoring, rate limiting, CSRF protection, backup/retention controls, and incident response |
 
 > **Do not enter real personal, payroll, health, biometric, safety-incident, or employment data into this project.**
 
@@ -309,7 +328,7 @@ For a manual smoke test, start the production build and visit `/worker/dashboard
 
 ## Container and Cloud Run deployment
 
-The repository includes a Node 20 Alpine `Dockerfile` that builds and serves the application in production mode on port `8080`.
+The repository includes a Node 24 Alpine `Dockerfile` that builds and serves the application in production mode on port `8080`.
 
 ### Build and run with Docker
 
@@ -346,6 +365,10 @@ FairShift's client-side state boundary is intentionally replaceable. A real impl
 
 See [ENGINEERING_REPORT.md](ENGINEERING_REPORT.md) for implementation detail and an adapter-oriented architecture note.
 
+## Security policy
+
+See [SECURITY.md](SECURITY.md) for the reporting process, scope, and production security requirements. Do not report a suspected vulnerability in a public GitHub issue and never use real workforce information in a proof of concept.
+
 ## Contributing
 
 FairShift is currently a prototype, but contributions are welcome when they preserve its core promise: **workers receive clarity and agency; administrators receive actionable context without unnecessary exposure of personal information.**
@@ -363,6 +386,7 @@ For substantial product or architecture changes, open an issue first so the inte
 ## Documentation and support
 
 - [Engineering report](ENGINEERING_REPORT.md) — implementation notes, route inventory, and production-adapter outline.
+- [Security policy](SECURITY.md) — vulnerability reporting and security scope.
 - [Submission checklist](SUBMISSION_CHECKLIST.md) — hackathon delivery checklist.
 - [LinkedIn post draft](LINKEDIN_POST_DRAFT.md) — project announcement draft.
 
