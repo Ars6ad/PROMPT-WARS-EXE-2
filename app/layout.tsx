@@ -1,4 +1,5 @@
 import './globals.css';
+import { AccessibilityProvider } from '@/components/AccessibilityTools';
 import { DemoProvider } from '@/components/DemoProvider';
 
 export const metadata = {
@@ -14,5 +15,5 @@ export const viewport = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body><a className="skip-link" href="#main-content">Skip to main content</a><DemoProvider>{children}</DemoProvider></body></html>;
+  return <html lang="en"><body><a className="skip-link" href="#main-content">Skip to main content</a><AccessibilityProvider><DemoProvider>{children}</DemoProvider></AccessibilityProvider></body></html>;
 }
