@@ -2,7 +2,7 @@
 
 ## Repository audit
 
-FairShift is a Next.js 15 App Router application written in TypeScript. It uses Tailwind CSS, Lucide icons, Zod, and Vitest. It has a Cloud Run-compatible Dockerfile and no configured external backend or identity provider.
+FairShift is a Next.js 16 App Router application written in TypeScript. It uses Tailwind CSS, Lucide icons, Zod, and Vitest. It has a Cloud Run-compatible Dockerfile and no configured external backend or identity provider.
 
 The original project had a strong responsive presentation and seeded content, but attendance, safety, and administrative views were separate mock screens. There was no session provider, server API, database migration, persistent action history, or connected worker/admin workflow.
 
@@ -38,7 +38,7 @@ The current deployment is deliberately a **demo-mode modular client application*
 
 ## Preserved functionality
 
-The Apple-inspired responsive light visual system, high contrast/reduced motion fallbacks, demo role entry points, safety categories, pay explanation, fatigue content, portable skill passport, Dockerfile, and Cloud Run deployment instructions remain in place.
+The Apple-inspired responsive light visual system, high contrast/reduced motion fallbacks, opt-in read-aloud, 32 voice locales, core-worker language localisation, demo role entry points, safety categories, pay explanation, fatigue content, portable skill passport, Dockerfile, and Cloud Run deployment instructions remain in place.
 
 ## Production dependency plan
 
@@ -58,5 +58,5 @@ The Apple-inspired responsive light visual system, high contrast/reduced motion 
 
 - Browser-local demo state only; data is not shared between browsers, users, or Cloud Run instances.
 - Demo sign-in is not authentication and must not be used for real worker data.
-- QR scanning, downloads, speech recognition, image attachment, actual translations, emails/OTP, and payments remain intentionally simulated or browser-dependent.
+- QR scanning, downloads, speech recognition/recording, image attachment, full written translation for every voice locale, emails/OTP, and payments remain intentionally simulated or browser-dependent.
 - No external deployment has been made or claimed.
