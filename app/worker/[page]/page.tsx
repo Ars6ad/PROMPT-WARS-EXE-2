@@ -33,6 +33,7 @@ const badge = (severity: string) => severity === 'High' ? 'alert' : severity ===
 
 function AttendanceAction() {
   const { state, checkIn, checkOut } = useDemo();
+  const { labels } = useAccessibilityTools();
   const [notice, setNotice] = useState('');
   const checkedIn = state.attendance.status === 'checked-in';
   const completed = state.attendance.status === 'checked-out';
@@ -44,7 +45,7 @@ function AttendanceAction() {
 
   return <>
     <button className="btn primary" onClick={act} disabled={completed}>
-      {completed ? <><CheckCircle2 size={18} />Shift complete</> : checkedIn ? <><CheckCircle2 size={18} />Check out</> : <><Clock size={18} />Check in</>}
+      {completed ? <><CheckCircle2 size={18} />{labels.shiftComplete}</> : checkedIn ? <><CheckCircle2 size={18} />{labels.checkOut}</> : <><Clock size={18} />{labels.checkIn}</>}
     </button>
     {notice && <p role="status" className="muted" style={{ fontSize: 13, marginBottom: 0 }}>{notice}</p>}
   </>;
@@ -73,7 +74,7 @@ function DayPlan({ checkedIn, shiftDone }: { checkedIn: boolean; shiftDone: bool
 export default function WorkerPage({ params }: { params: Promise<{ page: string }> }) {
   const { page } = use(params);
   const { state, ready } = useDemo();
-  const { language } = useAccessibilityTools();
+  const { language, labels } = useAccessibilityTools();
 
   if (!ready) return <WorkerShell title="Loading your workspace"><div className="card"><p className="muted">Loading locally saved demo data…</p></div></WorkerShell>;
 
@@ -89,7 +90,7 @@ export default function WorkerPage({ params }: { params: Promise<{ page: string 
         <div className="eyebrow">Your workspace</div>
         <p className="muted">Tuesday, 27 October · {worker.role}</p>
       </div>
-      <Link href="/worker/shift" className="dashboard-date"><CalendarDays size={16} /> Today&apos;s shift</Link>
+      <Link href="/worker/shift" className="dashboard-date"><CalendarDays size={16} /> {labels.todaysShift}</Link>
     </div>
 
     <section className="card signature-card worker-status-card">
@@ -105,7 +106,7 @@ export default function WorkerPage({ params }: { params: Promise<{ page: string 
     <section className="worker-summary-grid" aria-label="Your work summary">
       <Link className="card summary-card" href="/worker/pay">
         <div className="summary-icon"><WalletCards size={19} /></div>
-        <span>Estimated pay</span>
+        <span>{labels.pay}</span>
         <strong>₹18,420</strong>
         <small>Expected 31 Oct <ChevronRight size={14} /></small>
       </Link>
@@ -125,15 +126,15 @@ export default function WorkerPage({ params }: { params: Promise<{ page: string 
     <section className="worker-section" aria-labelledby="quick-actions-heading">
       <div className="section-heading"><div><div className="eyebrow">Stay informed</div><h2 id="quick-actions-heading">Quick actions</h2></div></div>
       <div className="quick-action-grid">
-        <Link className="quick-action" href="/worker/pay"><WalletCards size={20} /><span><b>Review pay</b><small>Hours, overtime and estimate</small></span><ChevronRight size={18} /></Link>
-        <Link className="quick-action" href="/worker/safety"><ShieldAlert size={20} /><span><b>Speak up safely</b><small>Report a concern, anonymously if needed</small></span><ChevronRight size={18} /></Link>
-        <Link className="quick-action" href="/worker/feedback"><MessageCircle size={20} /><span><b>Share feedback</b><small>Tell us how this week feels</small></span><ChevronRight size={18} /></Link>
+        <Link className="quick-action" href="/worker/pay"><WalletCards size={20} /><span><b>{labels.pay}</b><small>Hours, overtime and estimate</small></span><ChevronRight size={18} /></Link>
+        <Link className="quick-action" href="/worker/safety"><ShieldAlert size={20} /><span><b>{labels.safety}</b><small>Report a concern, anonymously if needed</small></span><ChevronRight size={18} /></Link>
+        <Link className="quick-action" href="/worker/feedback"><MessageCircle size={20} /><span><b>{labels.feedback}</b><small>Tell us how this week feels</small></span><ChevronRight size={18} /></Link>
       </div>
     </section>
 
     <section className="skill-nudge" aria-labelledby="skill-nudge-heading">
       <div className="skill-nudge-icon"><BadgeCheck size={21} /></div>
-      <div><div className="eyebrow">Keep growing</div><h2 id="skill-nudge-heading">Your skill passport</h2><p>2 skills are verified and Masonry Assistant is in progress.</p><Link href="/worker/skills">View your skills <ChevronRight size={15} /></Link></div>
+      <div><div className="eyebrow">Keep growing</div><h2 id="skill-nudge-heading">{labels.skills}</h2><p>2 skills are verified and Masonry Assistant is in progress.</p><Link href="/worker/skills">View your skills <ChevronRight size={15} /></Link></div>
     </section>
 
     <section className="card safety-pulse" aria-label="Safety and rest update">
@@ -184,7 +185,7 @@ export default function WorkerPage({ params }: { params: Promise<{ page: string 
     <section className="card"><HardHat color="var(--orange)" /><h2>{worker.name}</h2><p className="muted">Worker-entered profile · Construction Helper</p><h3>Verified skills</h3><p><span className="chip">✓ PPE Basics</span> <span className="chip">✓ Scaffold Safety</span> <span className="chip">In progress · Masonry Assistant</span></p><p className="muted">Employer verified: PPE Basics, Scaffold Safety</p><button className="btn primary" type="button"><Download size={17} />Share profile card</button></section>
     <section className="card profile-accessibility" aria-labelledby="worker-voice-settings">
       <div className="profile-accessibility-heading"><Languages size={21} /><div><div className="eyebrow">Personal accessibility</div><h2 id="worker-voice-settings">Language and read-aloud</h2></div></div>
-      <p className="muted">Choose the language FairShift requests from your device voice. Read-aloud is optional and never starts by itself.</p>
+      <p className="muted">Choose the language FairShift requests from your device voice. Core worker controls adapt in supported languages; read-aloud is optional and never starts by itself.</p>
       <LanguagePicker />
       <p className="muted" style={{ fontSize: 12 }}>The exact voice depends on voices installed in your browser or operating system. Your written shift details remain available at all times.</p>
     </section>

@@ -25,7 +25,7 @@ FairShift keeps those jobs distinct:
 - See a daily plan, pay snapshot, rest-time prompt, quick actions, and latest safety-report status on one dashboard.
 - Follow a practical shift rhythm: arrival and check-in, safety handover, planned recovery and meal breaks, a late-shift fatigue check, and handover/check-out.
 - Give anonymous-by-default feedback and view a portable skill passport.
-- Choose from 32 voice locales and use opt-in browser read-aloud for shift, pay, safety, feedback, and profile information. Core shift briefings include native-language wording for Arabic, Bengali, Gujarati, Hindi, Kannada, Malayalam, Marathi, Punjabi, Tamil, Telugu, and Urdu.
+- Choose from 32 voice locales and use opt-in browser read-aloud for shift, pay, safety, feedback, and profile information. Core worker navigation and check-in controls, plus shift briefings, include native-language wording for Arabic, Bengali, Gujarati, Hindi, Kannada, Malayalam, Marathi, Punjabi, Tamil, Telugu, and Urdu; every other voice locale falls back safely to English UI text.
 
 ### Admin workspace
 

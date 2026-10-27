@@ -68,8 +68,65 @@ export function getLocalizedShiftBriefing(languageCode: string, fallback: string
   return localizedShiftBriefings[languageCode] ?? fallback;
 }
 
+export type CoreLabels = {
+  greeting: string;
+  home: string;
+  shifts: string;
+  safety: string;
+  profile: string;
+  voiceLanguage: string;
+  listen: string;
+  stop: string;
+  readAloud: string;
+  todaysShift: string;
+  checkIn: string;
+  checkOut: string;
+  shiftComplete: string;
+  pay: string;
+  feedback: string;
+  skills: string;
+};
+
+const englishLabels: CoreLabels = {
+  greeting: 'Good morning, Asha',
+  home: 'Home',
+  shifts: 'Shifts',
+  safety: 'Safety',
+  profile: 'Profile',
+  voiceLanguage: 'Read-aloud language',
+  listen: 'Listen',
+  stop: 'Stop',
+  readAloud: 'Read aloud',
+  todaysShift: "Today's shift",
+  checkIn: 'Check in',
+  checkOut: 'Check out',
+  shiftComplete: 'Shift complete',
+  pay: 'Pay',
+  feedback: 'Feedback',
+  skills: 'Skills',
+};
+
+const translatedCoreLabels: Record<string, CoreLabels> = {
+  'ar-SA': { greeting: 'صباح الخير، آشا', home: 'الرئيسية', shifts: 'الورديات', safety: 'السلامة', profile: 'الملف الشخصي', voiceLanguage: 'لغة القراءة الصوتية', listen: 'استمع', stop: 'إيقاف', readAloud: 'اقرأ بصوت عالٍ', todaysShift: 'وردية اليوم', checkIn: 'تسجيل الحضور', checkOut: 'تسجيل الانصراف', shiftComplete: 'اكتملت الوردية', pay: 'الأجر', feedback: 'الملاحظات', skills: 'المهارات' },
+  'bn-IN': { greeting: 'সুপ্রভাত, আশা', home: 'হোম', shifts: 'শিফট', safety: 'নিরাপত্তা', profile: 'প্রোফাইল', voiceLanguage: 'পড়ে শোনানোর ভাষা', listen: 'শুনুন', stop: 'থামান', readAloud: 'জোরে পড়ুন', todaysShift: 'আজকের শিফট', checkIn: 'চেক ইন', checkOut: 'চেক আউট', shiftComplete: 'শিফট সম্পূর্ণ', pay: 'বেতন', feedback: 'মতামত', skills: 'দক্ষতা' },
+  'gu-IN': { greeting: 'સુપ્રભાત, આશા', home: 'હોમ', shifts: 'શિફ્ટ', safety: 'સલામતી', profile: 'પ્રોફાઇલ', voiceLanguage: 'વાંચન ભાષા', listen: 'સાંભળો', stop: 'બંધ કરો', readAloud: 'મોટેથી વાંચો', todaysShift: 'આજની શિફ્ટ', checkIn: 'ચેક ઇન', checkOut: 'ચેક આઉટ', shiftComplete: 'શિફ્ટ પૂર્ણ', pay: 'પગાર', feedback: 'પ્રતિસાદ', skills: 'કૌશલ્ય' },
+  'hi-IN': { greeting: 'सुप्रभात, आशा', home: 'होम', shifts: 'शिफ्ट', safety: 'सुरक्षा', profile: 'प्रोफ़ाइल', voiceLanguage: 'सुनाने की भाषा', listen: 'सुनें', stop: 'रोकें', readAloud: 'सुनें', todaysShift: 'आज की शिफ्ट', checkIn: 'चेक इन', checkOut: 'चेक आउट', shiftComplete: 'शिफ्ट पूरी हुई', pay: 'वेतन', feedback: 'फ़ीडबैक', skills: 'कौशल' },
+  'kn-IN': { greeting: 'ಶುಭೋದಯ, ಆಶಾ', home: 'ಮುಖಪುಟ', shifts: 'ಪಾಳಿಗಳು', safety: 'ಸುರಕ್ಷತೆ', profile: 'ಪ್ರೊಫೈಲ್', voiceLanguage: 'ಓದಿ ಹೇಳುವ ಭಾಷೆ', listen: 'ಆಲಿಸಿ', stop: 'ನಿಲ್ಲಿಸಿ', readAloud: 'ಜೋರಾಗಿ ಓದಿ', todaysShift: 'ಇಂದಿನ ಪಾಳಿ', checkIn: 'ಚೆಕ್ ಇನ್', checkOut: 'ಚೆಕ್ ಔಟ್', shiftComplete: 'ಪಾಳಿ ಪೂರ್ಣಗೊಂಡಿದೆ', pay: 'ವೇತನ', feedback: 'ಪ್ರತಿಕ್ರಿಯೆ', skills: 'ಕೌಶಲ್ಯಗಳು' },
+  'ml-IN': { greeting: 'സുപ്രഭാതം, ആശ', home: 'ഹോം', shifts: 'ഷിഫ്റ്റുകൾ', safety: 'സുരക്ഷ', profile: 'പ്രൊഫൈൽ', voiceLanguage: 'വായിച്ചു കേൾപ്പിക്കുന്ന ഭാഷ', listen: 'കേൾക്കുക', stop: 'നിർത്തുക', readAloud: 'ഉറക്കെ വായിക്കുക', todaysShift: 'ഇന്നത്തെ ഷിഫ്റ്റ്', checkIn: 'ചെക്ക് ഇൻ', checkOut: 'ചെക്ക് ഔട്ട്', shiftComplete: 'ഷിഫ്റ്റ് പൂർത്തിയായി', pay: 'വേതനം', feedback: 'അഭിപ്രായം', skills: 'കഴിവുകൾ' },
+  'mr-IN': { greeting: 'शुभ सकाळ, आशा', home: 'मुख्यपृष्ठ', shifts: 'शिफ्ट', safety: 'सुरक्षा', profile: 'प्रोफाइल', voiceLanguage: 'वाचून दाखवण्याची भाषा', listen: 'ऐका', stop: 'थांबवा', readAloud: 'मोठ्याने वाचा', todaysShift: 'आजची शिफ्ट', checkIn: 'चेक इन', checkOut: 'चेक आउट', shiftComplete: 'शिफ्ट पूर्ण', pay: 'वेतन', feedback: 'अभिप्राय', skills: 'कौशल्ये' },
+  'pa-IN': { greeting: 'ਸ਼ੁਭ ਸਵੇਰ, ਆਸ਼ਾ', home: 'ਹੋਮ', shifts: 'ਸ਼ਿਫਟਾਂ', safety: 'ਸੁਰੱਖਿਆ', profile: 'ਪ੍ਰੋਫਾਈਲ', voiceLanguage: 'ਸੁਣਾਉਣ ਦੀ ਭਾਸ਼ਾ', listen: 'ਸੁਣੋ', stop: 'ਰੋਕੋ', readAloud: 'ਉੱਚੀ ਆਵਾਜ਼ ਵਿੱਚ ਪੜ੍ਹੋ', todaysShift: 'ਅੱਜ ਦੀ ਸ਼ਿਫਟ', checkIn: 'ਚੈਕ ਇਨ', checkOut: 'ਚੈਕ ਆਉਟ', shiftComplete: 'ਸ਼ਿਫਟ ਪੂਰੀ', pay: 'ਤਨਖਾਹ', feedback: 'ਫੀਡਬੈਕ', skills: 'ਹੁਨਰ' },
+  'ta-IN': { greeting: 'காலை வணக்கம், ஆஷா', home: 'முகப்பு', shifts: 'பணிநேரங்கள்', safety: 'பாதுகாப்பு', profile: 'சுயவிவரம்', voiceLanguage: 'வாசிப்பு மொழி', listen: 'கேளுங்கள்', stop: 'நிறுத்து', readAloud: 'சத்தமாக வாசிக்கவும்', todaysShift: 'இன்றைய பணி', checkIn: 'செக் இன்', checkOut: 'செக் அவுட்', shiftComplete: 'பணி முடிந்தது', pay: 'ஊதியம்', feedback: 'கருத்து', skills: 'திறன்கள்' },
+  'te-IN': { greeting: 'శుభోదయం, ఆశా', home: 'హోమ్', shifts: 'షిఫ్టులు', safety: 'భద్రత', profile: 'ప్రొఫైల్', voiceLanguage: 'చదివే భాష', listen: 'వినండి', stop: 'ఆపండి', readAloud: 'బిగ్గరగా చదవండి', todaysShift: 'నేటి షిఫ్ట్', checkIn: 'చెక్ ఇన్', checkOut: 'చెక్ అవుట్', shiftComplete: 'షిఫ్ట్ పూర్తయింది', pay: 'వేతనం', feedback: 'అభిప్రాయం', skills: 'నైపుణ్యాలు' },
+  'ur-PK': { greeting: 'صبح بخیر، آشا', home: 'ہوم', shifts: 'شفٹیں', safety: 'حفاظت', profile: 'پروفائل', voiceLanguage: 'سنانے کی زبان', listen: 'سنیں', stop: 'روکیں', readAloud: 'بلند آواز سے پڑھیں', todaysShift: 'آج کی شفٹ', checkIn: 'چیک اِن', checkOut: 'چیک آؤٹ', shiftComplete: 'شفٹ مکمل', pay: 'تنخواہ', feedback: 'رائے', skills: 'مہارتیں' },
+};
+
+export function getCoreLabels(languageCode: string): CoreLabels {
+  return translatedCoreLabels[languageCode] ?? englishLabels;
+}
+
 type AssistiveContextValue = {
   language: SupportedLanguage;
+  labels: CoreLabels;
   setLanguage: (code: string) => void;
   speaking: boolean;
   supported: boolean;
@@ -108,6 +165,11 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
       // A browser can block local storage; English remains a safe default.
     }
   }, []);
+
+  useEffect(() => {
+    document.documentElement.lang = language.code;
+    document.documentElement.dir = language.direction ?? 'ltr';
+  }, [language]);
 
   useEffect(() => {
     if (!supported) return;
@@ -171,8 +233,9 @@ export function AccessibilityProvider({ children }: { children: React.ReactNode 
     synth.speak(utterance);
   }, [language, supported, voices]);
 
-  const value = useMemo(() => ({ language, setLanguage, speaking, supported, announcement, speak, stop }), [announcement, language, setLanguage, speak, speaking, stop, supported]);
-  return <AssistiveContext.Provider value={value}>{children}<p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</p></AssistiveContext.Provider>;
+  const labels = getCoreLabels(language.code);
+  const value = useMemo(() => ({ language, labels, setLanguage, speaking, supported, announcement, speak, stop }), [announcement, labels, language, setLanguage, speak, speaking, stop, supported]);
+  return <AssistiveContext.Provider value={value}><div className="app-language-scope" lang={language.code} dir={language.direction ?? 'ltr'}>{children}</div><p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{announcement}</p></AssistiveContext.Provider>;
 }
 
 export function useAccessibilityTools() {
@@ -182,19 +245,19 @@ export function useAccessibilityTools() {
 }
 
 export function LanguagePicker({ compact = false }: { compact?: boolean }) {
-  const { language, setLanguage } = useAccessibilityTools();
+  const { language, labels, setLanguage } = useAccessibilityTools();
   return <label className={`language-picker ${compact ? 'compact' : ''}`}>
     <Languages size={17} aria-hidden="true" />
-    <span className="language-picker-label">Voice language</span>
-    <select value={language.code} onChange={event => setLanguage(event.target.value)} aria-label="Preferred language for read-aloud">
+    <span className="language-picker-label">{labels.voiceLanguage}</span>
+    <select value={language.code} onChange={event => setLanguage(event.target.value)} aria-label={labels.voiceLanguage}>
       {supportedLanguages.map(option => <option key={option.code} value={option.code} dir={option.direction}>{option.label} — {option.nativeLabel}</option>)}
     </select>
   </label>;
 }
 
 export function VoiceButton({ text, label = 'Read this page aloud', compact = false }: { text: string; label?: string; compact?: boolean }) {
-  const { speak, speaking, stop, supported } = useAccessibilityTools();
-  const actionLabel = speaking ? 'Stop read-aloud' : label;
+  const { labels, speak, speaking, stop, supported } = useAccessibilityTools();
+  const actionLabel = speaking ? labels.stop : label;
   return <button
     type="button"
     className={`btn soft voice-button ${compact ? 'compact' : ''}`}
@@ -204,7 +267,7 @@ export function VoiceButton({ text, label = 'Read this page aloud', compact = fa
     title={supported ? actionLabel : 'Read-aloud is unavailable in this browser'}
   >
     {speaking ? <Square size={16} fill="currentColor" aria-hidden="true" /> : <Volume2 size={17} aria-hidden="true" />}
-    <span>{speaking ? 'Stop' : compact ? 'Listen' : 'Read aloud'}</span>
+    <span>{speaking ? labels.stop : compact ? labels.listen : labels.readAloud}</span>
   </button>;
 }
 

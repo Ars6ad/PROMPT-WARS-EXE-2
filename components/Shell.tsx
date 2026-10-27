@@ -17,13 +17,13 @@ import {
   UsersRound,
   WalletCards,
 } from 'lucide-react';
-import { LanguagePicker, VoiceButton } from '@/components/AccessibilityTools';
+import { LanguagePicker, useAccessibilityTools, VoiceButton } from '@/components/AccessibilityTools';
 
 const workerLinks = [
-  ['/worker/dashboard', 'Home', Home],
-  ['/worker/shift', 'Shifts', Clock],
-  ['/worker/safety', 'Safety', ShieldAlert],
-  ['/worker/profile', 'Profile', User],
+  ['/worker/dashboard', 'home', Home],
+  ['/worker/shift', 'shifts', Clock],
+  ['/worker/safety', 'safety', ShieldAlert],
+  ['/worker/profile', 'profile', User],
 ] as const;
 
 const adminLinks = [
@@ -44,13 +44,15 @@ type ShellProps = {
 
 export function WorkerShell({ children, title = 'Good morning, Asha', voiceSummary }: ShellProps) {
   const pathname = usePathname();
-  const spokenSummary = voiceSummary ?? `${title}. Your FairShift worker workspace is ready. Use the page headings and links to review your shift, pay, safety support, and profile.`;
+  const { labels } = useAccessibilityTools();
+  const heading = title === 'Good morning, Asha' ? labels.greeting : title;
+  const spokenSummary = voiceSummary ?? `${heading}. Your FairShift worker workspace is ready. Use the page headings and links to review your shift, pay, safety support, and profile.`;
 
   return <main id="main-content" className="shell worker">
     <header className="nav">
       <div>
         <div className="eyebrow">FairShift · Worker app</div>
-        <h1 className="title">{title}</h1>
+        <h1 className="title">{heading}</h1>
       </div>
       <div className="app-top-actions" aria-label="Accessibility and profile controls">
         <LanguagePicker compact />
@@ -60,7 +62,7 @@ export function WorkerShell({ children, title = 'Good morning, Asha', voiceSumma
     </header>
     {children}
     <nav className="bottom" aria-label="Worker navigation">
-      {workerLinks.map(([href, label, Icon]) => <Link href={href} key={href} aria-current={pathname === href ? 'page' : undefined}><Icon size={19} />{label}</Link>)}
+      {workerLinks.map(([href, labelKey, Icon]) => <Link href={href} key={href} aria-current={pathname === href ? 'page' : undefined}><Icon size={19} />{labels[labelKey]}</Link>)}
     </nav>
   </main>;
 }
